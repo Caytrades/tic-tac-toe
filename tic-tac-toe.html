@@ -1,0 +1,315 @@
+<!-- Created by `нттየ⁴⁰⁶ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Tic Tac Toe</title>
+	<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+	<style>
+		@keyframes glitter {
+			0% { opacity: 0.2; }
+			50% { opacity: 1; }
+			100% { opacity: 0.2; }
+		}
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			background-color: #000;
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: url('https://www.transparenttextures.com/patterns/stardust.png'), #000;
+		}
+		.game-container {
+			text-align: center;
+			background-color: rgba(0, 0, 5, 0.8);
+			padding: 20px;
+			border-radius: 10px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+		}
+		.title {
+			font-size: 2.5rem;
+			margin-bottom: 20px;
+			color: #fff;
+			text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+		}
+		.board {
+			display: grid;
+			grid-template-columns: repeat(3, 80px);
+			grid-template-rows: repeat(3, 80px);
+			gap: 5px;
+			margin: 20px auto;
+		}
+		.cell {
+			width: 80px;
+			height: 80px;
+			background-color: #fff;
+			border: 2px solid #000;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-size: 2rem;
+			cursor: pointer;
+			transition: background-color 0.3s;
+			font-family: 'Comic Neue', cursive;
+		}
+		.cell:hover {
+			background-color: #f9f9f9;
+		}
+		.controls {
+			margin-top: 20px;
+		}
+		button {
+			padding: 5px 10px;
+			margin: 5px;
+			font-size: 1rem;
+			cursor: pointer;
+			background-color: #4CAF50;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			transition: background-color 0.3s;
+		}
+		button:hover {
+			background-color: #45a049;
+		}
+		select {
+			padding: 5px;
+			margin: 5px;
+			font-size: 0.9rem;
+			cursor: pointer;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			transition: background-color 0.3s, box-shadow 0.3s;
+		}
+		select:hover {
+			background-color: #f1f1f1;
+			box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+		}
+		.scoreboard {
+			display: flex;
+			justify-content: space-around;
+			margin-bottom: 20px;
+			font-size: 1rem;
+		}
+	</style>
+</head>
+<body>
+	<div class="game-container">
+		<div class="title">Tic Tac Toe</div>
+		<div class="scoreboard" style="color: #ff0;">
+			<div id="player1Score">Player 1: 0</div>
+			<div id="player2Score">Player 2: 0</div>
+		</div>
+		<div class="board">
+			<div class="cell" data-index="0"></div>
+			<div class="cell" data-index="1"></div>
+			<div class="cell" data-index="2"></div>
+			<div class="cell" data-index="3"></div>
+			<div class="cell" data-index="4"></div>
+			<div class="cell" data-index="5"></div>
+			<div class="cell" data-index="6"></div>
+			<div class="cell" data-index="7"></div>
+			<div class="cell" data-index="8"></div>
+		</div>
+		<div class="controls">
+			<button id="resetButton">Reset</button>
+			<div>
+				<label for="mode" style="color: #f00;">Game Mode: </label>
+				<select id="mode">
+					<option value="human">Human vs Human</option>
+					<option value="ai">Human vs AI</option>
+				</select>
+			</div>
+			<div>
+				<label for="symbol" style="color: #f00;">Choose Symbol: </label>
+				<select id="symbol">
+					<option value="X">X</option>
+					<option value="O">O</option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<script>
+		let board = ['', '', '', '', '', '', '', '', ''];
+let currentPlayer = 'X';
+let gameMode = 'human';
+let humanSymbol = 'X';
+let aiSymbol = 'O';
+let player1Score = 0;
+let player2Score = 0;
+
+const cells = document.querySelectorAll('.cell');
+const resetButton = document.getElementById('resetButton');
+const modeSelect = document.getElementById('mode');
+const symbolSelect = document.getElementById('symbol');
+const player1ScoreDisplay = document.getElementById('player1Score');
+const player2ScoreDisplay = document.getElementById('player2Score');
+
+const winningCombos = [
+	[0, 1, 2],
+	[3, 4, 5],
+	[6, 7, 8],
+	[0, 3, 6],
+	[1, 4, 7],
+	[2, 5, 8],
+	[0, 4, 8],
+	[2, 4, 6]
+];
+
+cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+resetButton.addEventListener('click', resetGame);
+modeSelect.addEventListener('change', (e) => {
+	gameMode = e.target.value;
+	if (gameMode === 'ai') {
+		player2ScoreDisplay.textContent = 'AI: ' + player2Score;
+	} else {
+		player2ScoreDisplay.textContent = 'Player 2: ' + player2Score;
+	}
+});
+symbolSelect.addEventListener('change', (e) => {
+	humanSymbol = e.target.value;
+	aiSymbol = humanSymbol === 'X' ? 'O' : 'X';
+	resetGame();
+});
+
+function handleCellClick(e) {
+	const index = e.target.getAttribute('data-index');
+	if (board[index] === '') {
+		board[index] = currentPlayer;
+		e.target.textContent = currentPlayer;
+		if (checkWin(currentPlayer)) {
+			updateScore(currentPlayer);
+			setTimeout(() => alert(`${currentPlayer} wins!`), 100);
+			resetBoard();
+		} else if (board.every(cell => cell !== '')) {
+			setTimeout(() => alert('Draw!'), 100);
+			resetBoard();
+		} else {
+			switchPlayer();
+			if (gameMode === 'ai' && currentPlayer === aiSymbol) {
+				setTimeout(aiMove, 500);  // Adding a small delay for better UX
+			}
+		}
+	}
+}
+
+function switchPlayer() {
+	currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+}
+
+function checkWin(player) {
+	return winningCombos.some(combo => combo.every(index => board[index] === player));
+}
+
+function resetBoard() {
+	board = ['', '', '', '', '', '', '', '', ''];
+	cells.forEach(cell => cell.textContent = '');
+	currentPlayer = humanSymbol;
+}
+
+function resetGame() {
+	resetBoard();
+	player1Score = 0;
+	player2Score = 0;
+	updateScoreDisplay();
+}
+
+function updateScore(player) {
+	if (player === humanSymbol) {
+		player1Score++;
+	} else {
+		player2Score++;
+	}
+	updateScoreDisplay();
+}
+
+function updateScoreDisplay() {
+	player1ScoreDisplay.textContent = `Player 1: ${player1Score}`;
+	if (gameMode === 'ai') {
+		player2ScoreDisplay.textContent = `AI: ${player2Score}`;
+	} else {
+		player2ScoreDisplay.textContent = `Player 2: ${player2Score}`;
+	}
+}
+
+function aiMove() {
+	const bestMove = minimax(board, aiSymbol, -Infinity, Infinity).index;
+	board[bestMove] = aiSymbol;
+	cells[bestMove].textContent = aiSymbol;
+	if (checkWin(aiSymbol)) {
+		updateScore(aiSymbol);
+		setTimeout(() => alert(`${aiSymbol} wins!`), 100);
+		resetBoard();
+	} else if (board.every(cell => cell !== '')) {
+		setTimeout(() => alert('Draw!'), 100);
+		resetBoard();
+	} else {
+		switchPlayer();
+	}
+}
+
+function minimax(newBoard, player, alpha, beta) {
+	const emptyCells = newBoard.map((cell, index) => cell === '' ? index : null).filter(index => index !== null);
+
+	if (checkWin(humanSymbol)) {
+		return { score: -10 };
+	} else if (checkWin(aiSymbol)) {
+		return { score: 10 };
+	} else if (emptyCells.length === 0) {
+		return { score: 0 };
+	}
+
+	const moves = [];
+	for (let i = 0; i < emptyCells.length; i++) {
+		const index = emptyCells[i];
+		const move = { index: index };
+		newBoard[index] = player;
+
+		if (player === aiSymbol) {
+			move.score = minimax(newBoard, humanSymbol, alpha, beta).score;
+			if (move.score > alpha) {
+				alpha = move.score;
+			}
+		} else {
+			move.score = minimax(newBoard, aiSymbol, alpha, beta).score;
+			if (move.score < beta) {
+				beta = move.score;
+			}
+		}
+
+		newBoard[index] = '';
+		moves.push(move);
+
+		if (player === aiSymbol && beta <= alpha) break; // beta cut-off
+		if (player === humanSymbol && beta <= alpha) break; // alpha cut-off
+	}
+
+	let bestMove;
+	if (player === aiSymbol) {
+		let bestScore = -Infinity;
+		for (let i = 0; i < moves.length; i++) {
+			if (moves[i].score > bestScore) {
+				bestScore = moves[i].score;
+				bestMove = moves[i];
+			}
+		}
+	} else {
+		let bestScore = Infinity;
+		for (let i = 0; i < moves.length; i++) {
+			if (moves[i].score < bestScore) {
+				bestScore = moves[i].score;
+				bestMove = moves[i];
+			}
+		}
+	}
+
+	return bestMove;
+}
+
+	</script>
+</body>
+</html>
