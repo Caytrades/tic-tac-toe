@@ -1,4 +1,4 @@
-		let board = ['', '', '', '', '', '', '', '', ''];
+let board = ['', '', '', '', '', '', '', '', ''];
 let currentPlayer = 'X';
 let gameMode = 'human';
 let humanSymbol = 'X';
